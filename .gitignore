@@ -1,0 +1,62 @@
+# IDEs and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# Laravel / PHP
+backend/vendor/
+backend/node_modules/
+backend/public/storage
+backend/storage/*.key
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/bootstrap/cache/*
+!backend/bootstrap/cache/.gitignore
+backend/npm-debug.log
+backend/yarn-error.log
+
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/.packages
+mobile/.pub/
+mobile/build/
+mobile/ios/.symlinks/
+mobile/ios/Pods/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/build.gradle
+mobile/android/local.properties
+mobile/build/
+mobile/android/app/src/main/java/io/flutter/plugins/

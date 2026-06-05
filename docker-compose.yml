@@ -1,0 +1,84 @@
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: psams_db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: psams_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: psams_user
+      MYSQL_PASSWORD: psams_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - psams_network
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:alpine
+    container_name: psams_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - psams_network
+
+  # Laravel Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: psams_backend
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    depends_on:
+      - db
+      - redis
+    networks:
+      - psams_network
+
+  # Python FastAPI AI Analytics Service
+  ai_service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    container_name: psams_ai_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=your_openai_api_key_here
+    volumes:
+      - ./ai_service:/app
+    networks:
+      - psams_network
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:alpine
+    container_name: psams_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+    depends_on:
+      - backend
+    networks:
+      - psams_network
+
+networks:
+  psams_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
