@@ -68,23 +68,26 @@ return new class extends Migration
         // 6. Athletes Table
         Schema::create('athletes', function (Blueprint $table) {
             $table->id();
-            $table->string('nomor_induk_atlet')->unique();
+            $table->string('nomor_induk_atlet')->nullable()->unique();
             $table->string('nama_lengkap');
-            $table->string('nik')->unique();
-            $table->string('tempat_lahir');
-            $table->date('tanggal_lahir');
-            $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);
+            $table->string('nik')->nullable()->unique();
+            $table->string('tempat_lahir')->nullable();
+            $table->date('tanggal_lahir')->nullable();
+            $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan'])->nullable();
             $table->text('alamat');
             $table->string('no_hp');
             $table->string('email')->unique();
             $table->string('foto')->nullable();
-            $table->string('klub'); // Text or relation
+            $table->string('klub')->nullable(); // Text or relation
             $table->foreignId('pelatih_id')->nullable()->constrained('coaches')->nullOnDelete();
-            $table->decimal('tinggi_badan', 5, 2); // cm
-            $table->decimal('berat_badan', 5, 2);  // kg
-            $table->string('kelas_tanding');
-            $table->string('sabuk'); // Belt/Level in sepak takraw (or standard tier)
+            $table->decimal('tinggi_badan', 5, 2)->nullable(); // cm
+            $table->decimal('berat_badan', 5, 2)->nullable();  // kg
+            $table->string('kelas_tanding')->nullable();
+            $table->string('sabuk')->nullable(); // Belt/Level in sepak takraw (or standard tier)
             $table->enum('status', ['Aktif', 'Nonaktif'])->default('Aktif');
+            $table->string('ktp')->nullable(); // Path to ID Card image
+            $table->string('kk')->nullable();  // Path to Family Card image
+            $table->text('sertifikat')->nullable(); // JSON list of certificate paths
             $table->timestamps();
         });
 

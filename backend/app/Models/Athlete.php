@@ -27,12 +27,16 @@ class Athlete extends Model
         'kelas_tanding',
         'sabuk',
         'status',
+        'ktp',
+        'kk',
+        'sertifikat',
     ];
 
     protected $casts = [
         'tanggal_lahir' => 'date',
         'tinggi_badan' => 'decimal:2',
         'berat_badan' => 'decimal:2',
+        'sertifikat' => 'array',
     ];
 
     public function coach(): BelongsTo

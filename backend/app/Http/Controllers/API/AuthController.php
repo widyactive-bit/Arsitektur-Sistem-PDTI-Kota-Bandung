@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Athlete;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -29,51 +30,101 @@ class AuthController extends Controller
 {
     /**
      * @OA\Post(
-      *     path="/auth/register",
-      *     summary="Registrasi Pengguna Baru",
-      *     tags={"Autentikasi"},
-      *     @OA\RequestBody(
-      *         required=true,
-      *         @OA\JsonContent(
-      *             required={"name","email","password","role"},
-      *             @OA\Property(property="name", type="string", example="Muhammad Rafli"),
-      *             @OA\Property(property="email", type="string", format="email", example="rafli@psti.bandung.go.id"),
-      *             @OA\Property(property="password", type="string", format="password", example="password123"),
-      *             @OA\Property(property="role", type="string", enum={"Super Admin", "Pengurus", "Pelatih", "Atlet", "Wasit"}, example="Atlet")
-      *         )
-      *     ),
-      *     @OA\Response(
-      *         response=201,
-      *         description="Registrasi Berhasil",
-      *         @OA\JsonContent(
-      *             @OA\Property(property="message", type="string", example="User registered successfully"),
-      *             @OA\Property(property="token", type="string", example="1|token_hash_here")
-      *         )
-      *     )
-      * )
-      */
+     *     path="/auth/register",
+     *     summary="Registrasi Pengguna & Atlet Baru",
+     *     tags={"Autentikasi"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"name","email","password","alamat","no_hp","ktp","kk"},
+     *                 @OA\Property(property="name", type="string", description="Nama Lengkap", example="Muhammad Rafli"),
+     *                 @OA\Property(property="email", type="string", format="email", description="Email Login", example="rafli@psti.bandung.go.id"),
+     *                 @OA\Property(property="password", type="string", format="password", description="Kata Sandi", example="password123"),
+     *                 @OA\Property(property="alamat", type="string", description="Alamat Lengkap", example="Jl. Lombok No. 12, Bandung"),
+     *                 @OA\Property(property="no_hp", type="string", description="No. Handphone", example="081122334455"),
+     *                 @OA\Property(property="ktp", type="string", format="binary", description="Scan KTP"),
+     *                 @OA\Property(property="kk", type="string", format="binary", description="Scan Kartu Keluarga"),
+     *                 @OA\Property(property="sertifikat[]", type="array", @OA\Items(type="string", format="binary"), description="Sertifikat Medali/Penghargaan (Opsional)")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Registrasi Berhasil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Registrasi berhasil. Skuad menunggu persetujuan admin."),
+     *             @OA\Property(property="token", type="string", example="1|token_hash_here"),
+     *             @OA\Property(property="user", type="object"),
+     *             @OA\Property(property="athlete", type="object")
+     *         )
+     *     )
+     * )
+     */
     public function register(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|string|in:Super Admin,Pengurus,Pelatih,Atlet,Wasit',
+            'alamat' => 'required|string',
+            'no_hp' => 'required|string',
+            'ktp' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'kk' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'sertifikat.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ]);
 
+        // Handle file uploads
+        $ktpPath = null;
+        if ($request->hasFile('ktp')) {
+            $ktpPath = $request->file('ktp')->store('registrasi/ktp', 'public');
+        }
+
+        $kkPath = null;
+        if ($request->hasFile('kk')) {
+            $kkPath = $request->file('kk')->store('registrasi/kk', 'public');
+        }
+
+        $sertifikatPaths = [];
+        if ($request->hasFile('sertifikat')) {
+            $files = $request->file('sertifikat');
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    $sertifikatPaths[] = $file->store('registrasi/sertifikat', 'public');
+                }
+            } else {
+                $sertifikatPaths[] = $files->store('registrasi/sertifikat', 'public');
+            }
+        }
+
+        // Create User
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => 'Atlet', // Default registered role
+        ]);
+
+        // Create Athlete
+        $athlete = Athlete::create([
+            'nama_lengkap' => $request->name,
+            'email' => $request->email,
+            'alamat' => $request->alamat,
+            'no_hp' => $request->no_hp,
+            'ktp' => $ktpPath,
+            'kk' => $kkPath,
+            'sertifikat' => $sertifikatPaths,
+            'status' => 'Nonaktif', // Require administrative approval
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'User registered successfully',
+            'message' => 'Registrasi berhasil. Profil atlet telah dibuat dalam status Nonaktif menunggu persetujuan admin.',
             'token' => $token,
-            'user' => $user
+            'user' => $user,
+            'athlete' => $athlete
         ], 201);
     }
 

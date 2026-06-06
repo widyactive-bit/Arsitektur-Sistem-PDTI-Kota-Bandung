@@ -3,8 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Use http://10.0.2.2:80 for Android Emulator connecting to localhost
-  static const String baseUrl = 'http://10.0.2.2/api'; 
+  // Use the public temporary tunnel URL for backend API requests
+  static const String baseUrl = 'https://f1861bc75733e9.lhr.life/api'; 
+
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -212,6 +213,63 @@ class ApiService {
     } catch (e) {
       print('Fetch AI analytics error: $e');
       return null;
+    }
+  }
+
+  // 10. Auth Register with Multipart Uploads
+  Future<Map<String, dynamic>> register({
+    required String name,
+    required String email,
+    required String password,
+    required String alamat,
+    required String noHp,
+    required String ktpPath,
+    required String kkPath,
+    required List<String> sertifikatPaths,
+  }) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/auth/register'));
+      
+      // Fields
+      request.fields['name'] = name;
+      request.fields['email'] = email;
+      request.fields['password'] = password;
+      request.fields['alamat'] = alamat;
+      request.fields['no_hp'] = noHp;
+
+      // Files
+      request.files.add(await http.MultipartFile.fromPath('ktp', ktpPath));
+      request.files.add(await http.MultipartFile.fromPath('kk', kkPath));
+
+      // Optional Certificates
+      for (int i = 0; i < sertifikatPaths.length; i++) {
+        if (sertifikatPaths[i].isNotEmpty) {
+          request.files.add(await http.MultipartFile.fromPath('sertifikat[]', sertifikatPaths[i]));
+        }
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': 'Registrasi berhasil.',
+          'data': jsonDecode(response.body),
+        };
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['message'] ?? 'Gagal melakukan registrasi.',
+        };
+      }
+    } catch (e) {
+      print('Register error: $e');
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan jaringan atau server: $e',
+      };
     }
   }
 }

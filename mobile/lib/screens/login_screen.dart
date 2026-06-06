@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'dashboard_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -166,7 +167,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                    );
+                  },
+                  child: const Text(
+                    'Belum punya akun? Daftar Skuad Atlet Baru',
+                    style: TextStyle(color: Color(0xFFE5B922), fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 const Text(
                   'Persatuan Sepak Takraw Indonesia\nPengkot Bandung',
                   textAlign: TextAlign.center,

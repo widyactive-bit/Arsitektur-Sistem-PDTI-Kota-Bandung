@@ -122,6 +122,26 @@ class AthleteResource extends Resource
                             ->directory('athletes-photos')
                             ->label('Foto Profil'),
                     ])->columns(2),
+
+                Forms\Components\Section::make('Dokumen Registrasi (Uploads)')
+                    ->schema([
+                        Forms\Components\FileUpload::make('ktp')
+                            ->directory('registrasi/ktp')
+                            ->label('Scan KTP')
+                            ->openable()
+                            ->downloadable(),
+                        Forms\Components\FileUpload::make('kk')
+                            ->directory('registrasi/kk')
+                            ->label('Scan Kartu Keluarga')
+                            ->openable()
+                            ->downloadable(),
+                        Forms\Components\FileUpload::make('sertifikat')
+                            ->multiple()
+                            ->directory('registrasi/sertifikat')
+                            ->label('Sertifikat-Sertifikat Penghargaan (Opsional)')
+                            ->openable()
+                            ->downloadable(),
+                    ])->columns(3),
             ]);
     }
 
