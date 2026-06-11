@@ -56,4 +56,10 @@ class AthleteGrowthChart extends ChartWidget
     {
         return 'line';
     }
+
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin', 'Pengurus', 'Pelatih']);
+    }
 }

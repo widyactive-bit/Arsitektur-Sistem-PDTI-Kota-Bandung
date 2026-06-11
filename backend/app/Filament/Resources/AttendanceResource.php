@@ -24,34 +24,45 @@ class AttendanceResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('athlete_id')
-                    ->relationship('athlete', 'nama_lengkap')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->label('Atlet'),
-                Forms\Components\DateTimePicker::make('checkin_time')
-                    ->required()
-                    ->label('Waktu Check In'),
-                Forms\Components\DateTimePicker::make('checkout_time')
-                    ->label('Waktu Check Out'),
-                Forms\Components\TextInput::make('duration')
-                    ->numeric()
-                    ->suffix('menit')
-                    ->label('Durasi Latihan'),
-                Forms\Components\TextInput::make('latitude')
-                    ->numeric()
-                    ->required()
-                    ->label('Latitude'),
-                Forms\Components\TextInput::make('longitude')
-                    ->numeric()
-                    ->required()
-                    ->label('Longitude'),
-                Forms\Components\FileUpload::make('selfie')
-                    ->image()
-                    ->directory('selfies')
-                    ->required()
-                    ->label('Foto Selfie PAP'),
+                Forms\Components\Section::make('Data Atlet & Waktu')
+                    ->schema([
+                        Forms\Components\Select::make('athlete_id')
+                            ->relationship('athlete', 'nama_lengkap')
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->label('Atlet'),
+                        Forms\Components\DateTimePicker::make('checkin_time')
+                            ->required()
+                            ->label('Waktu Check In'),
+                        Forms\Components\DateTimePicker::make('checkout_time')
+                            ->label('Waktu Check Out'),
+                        Forms\Components\TextInput::make('duration')
+                            ->numeric()
+                            ->suffix('menit')
+                            ->label('Durasi Latihan'),
+                    ])->columns(2),
+
+                Forms\Components\Section::make('Validasi Lokasi & Kehadiran')
+                    ->schema([
+                        Forms\Components\TextInput::make('latitude')
+                            ->numeric()
+                            ->required()
+                            ->label('Latitude GPS'),
+                        Forms\Components\TextInput::make('longitude')
+                            ->numeric()
+                            ->required()
+                            ->label('Longitude GPS'),
+                        Forms\Components\TextInput::make('qr_code_data')
+                            ->label('Data Scan QR Code')
+                            ->placeholder('Arahkan scanner QR ke sini...')
+                            ->columnSpanFull(),
+                        Forms\Components\FileUpload::make('selfie')
+                            ->image()
+                            ->directory('selfies')
+                            ->required()
+                            ->label('Foto Selfie Laporan'),
+                    ])->columns(2),
             ]);
     }
 
@@ -81,12 +92,76 @@ class AttendanceResource extends Resource
                     ->label('Selfie'),
             ])
             ->filters([
-                // Filter by date
+                Tables\Filters\Filter::make('checkin_time')
+                    ->form([
+                        Forms\Components\DatePicker::make('checkin_time')
+                            ->label('Tanggal Check In'),
+                    ])
+                    ->query(function ($query, $data) {
+                        return $query->when($data['checkin_time'], fn ($query, $date) => $query->whereDate('checkin_time', $date));
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if (!$user) {
+            return $query;
+        }
+
+        // Super Admin, Admin, Pengurus, Pelatih see all
+        if (in_array($user->role, ['Super Admin', 'Admin', 'Pengurus', 'Pelatih'])) {
+            return $query;
+        }
+
+        // Atlet can only see their own attendance
+        if ($user->role === 'Atlet') {
+            return $query->whereHas('athlete', function ($q) use ($user) {
+                $q->where('email', $user->email);
+            });
+        }
+
+        // Klub can only see attendance of athletes in their club
+        if ($user->role === 'Klub') {
+            return $query->whereHas('athlete', function ($q) use ($user) {
+                $q->where('klub', 'like', '%' . $user->name . '%');
+            });
+        }
+
+        // Others see nothing
+        return $query->whereRaw('1 = 0');
+    }
+
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        // Wasit cannot view attendance
+        return $user && $user->role !== 'Wasit';
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin', 'Pelatih', 'Atlet']);
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin', 'Pelatih']);
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin']);
     }
 
     public static function getPages(): array

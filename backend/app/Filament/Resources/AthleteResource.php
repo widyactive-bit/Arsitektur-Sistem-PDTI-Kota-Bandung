@@ -194,6 +194,62 @@ class AthleteResource extends Resource
             ]);
     }
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if (!$user) {
+            return $query;
+        }
+
+        // Super Admin, Admin, Pengurus, Pelatih, and Wasit can see all athletes
+        if (in_array($user->role, ['Super Admin', 'Admin', 'Pengurus', 'Pelatih', 'Wasit'])) {
+            return $query;
+        }
+
+        // Athlete can only see their own profile
+        if ($user->role === 'Atlet') {
+            return $query->where('email', $user->email);
+        }
+
+        // Club representative can only see athletes in their club
+        if ($user->role === 'Klub') {
+            return $query->where('klub', 'like', '%' . $user->name . '%');
+        }
+
+        // Others see nothing
+        return $query->whereRaw('1 = 0');
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin']);
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+        
+        if (in_array($user->role, ['Super Admin', 'Admin'])) {
+            return true;
+        }
+
+        if ($user->role === 'Atlet' && $record->email === $user->email) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin']);
+    }
+
     public static function getPages(): array
     {
         return [

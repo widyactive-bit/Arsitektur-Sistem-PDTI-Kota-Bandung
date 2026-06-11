@@ -7,7 +7,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -17,6 +20,12 @@ class User extends Authenticatable
         'password',
         'role',
         'position',
+        'no_hp',
+        'alamat',
+        'ktp',
+        'kk',
+        'sertifikat',
+        'status',
     ];
 
     protected $hidden = [
@@ -24,12 +33,16 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'sertifikat' => 'array',
+    ];
+
+    public function canAccessPanel(Panel $panel): bool
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        // Super Admin always has access. Others must be marked as 'Aktif'.
+        return $this->role === 'Super Admin' || $this->status === 'Aktif';
     }
 
     public function isSuperAdmin(): bool

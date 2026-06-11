@@ -1,0 +1,58 @@
+name: Build and Publish Docker images
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      backend_repo:
+        description: 'Docker Hub repo for backend (user/repo)'
+        required: false
+        default: ''
+      ai_repo:
+        description: 'Docker Hub repo for ai_service (user/repo)'
+        required: false
+        default: ''
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_BACKEND: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.backend_repo || format('{0}/psams-backend', secrets.DOCKERHUB_USERNAME) }}
+      IMAGE_AI: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ai_repo || format('{0}/psams-ai-service', secrets.DOCKERHUB_USERNAME) }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_BACKEND }}:latest
+            ${{ env.IMAGE_BACKEND }}:${{ github.sha }}
+
+      - name: Build and push ai_service image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./ai_service
+          file: ./ai_service/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_AI }}:latest
+            ${{ env.IMAGE_AI }}:${{ github.sha }}

@@ -37,6 +37,11 @@ class ClubResource extends Resource
                     ->numeric()
                     ->required()
                     ->label('Jumlah Atlet Terdaftar'),
+                Forms\Components\FileUpload::make('sk_terbaru')
+                    ->required()
+                    ->directory('klub/sk')
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+                    ->label('Upload SK Terbaru yang Sah (PDF/Gambar)'),
             ]);
     }
 
@@ -62,6 +67,52 @@ class ClubResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if (!$user) {
+            return $query;
+        }
+
+        // Klub can only see their own club
+        if ($user->role === 'Klub') {
+            return $query->where('nama_klub', 'like', '%' . $user->name . '%');
+        }
+
+        // Others see all clubs
+        return $query;
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin']);
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+
+        if (in_array($user->role, ['Super Admin', 'Admin'])) {
+            return true;
+        }
+
+        if ($user->role === 'Klub') {
+            return str_contains(strtolower($record->nama_klub), strtolower($user->name));
+        }
+
+        return false;
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin']);
     }
 
     public static function getPages(): array

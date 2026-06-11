@@ -89,6 +89,13 @@ class AthleteStatResource extends Resource
                             ->required()
                             ->label('Kepemimpinan (Leadership)'),
                     ])->columns(3),
+                Forms\Components\Section::make('Evaluasi & Catatan')
+                    ->schema([
+                        Forms\Components\Textarea::make('catatan_pelatih')
+                            ->label('Catatan Pelatih')
+                            ->rows(4)
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -112,6 +119,63 @@ class AthleteStatResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if (!$user) {
+            return $query;
+        }
+
+        // Super Admin, Admin, Pengurus, Pelatih see all
+        if (in_array($user->role, ['Super Admin', 'Admin', 'Pengurus', 'Pelatih'])) {
+            return $query;
+        }
+
+        // Atlet can only see their own stats
+        if ($user->role === 'Atlet') {
+            return $query->whereHas('athlete', function ($q) use ($user) {
+                $q->where('email', $user->email);
+            });
+        }
+
+        // Klub can only see stats of their athletes
+        if ($user->role === 'Klub') {
+            return $query->whereHas('athlete', function ($q) use ($user) {
+                $q->where('klub', 'like', '%' . $user->name . '%');
+            });
+        }
+
+        // Others see nothing
+        return $query->whereRaw('1 = 0');
+    }
+
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        // Wasit cannot view stats
+        return $user && $user->role !== 'Wasit';
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin', 'Pelatih']);
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin', 'Pelatih']);
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        $user = auth()->user();
+        return $user && in_array($user->role, ['Super Admin', 'Admin', 'Pelatih']);
     }
 
     public static function getPages(): array

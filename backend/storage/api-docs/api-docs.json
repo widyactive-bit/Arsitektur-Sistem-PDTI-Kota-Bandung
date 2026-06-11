@@ -1,0 +1,543 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "PSAMS REST API Documentation",
+        "description": "Dokumentasi API untuk PSTI Sport Analytics & Management System (PSAMS) Kota Bandung",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "API Base URL"
+        }
+    ],
+    "paths": {
+        "/athlete/profile": {
+            "get": {
+                "tags": [
+                    "Atlet"
+                ],
+                "summary": "Mendapatkan Informasi Profil & Biodata Atlet Aktif",
+                "operationId": "533943742c012384d5aa42d52d219099",
+                "responses": {
+                    "200": {
+                        "description": "Profil Biodata Atlet"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/athlete/stats": {
+            "get": {
+                "tags": [
+                    "Atlet"
+                ],
+                "summary": "Mendapatkan Histori Statistik Bulanan Atlet",
+                "operationId": "3e936164e9338b6d279d9977f779e8f7",
+                "responses": {
+                    "200": {
+                        "description": "Daftar Histori Parameter Fisik, Teknik & Mental"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/athlete/achievements": {
+            "get": {
+                "tags": [
+                    "Atlet"
+                ],
+                "summary": "Mendapatkan Riwayat Medali & Prestasi Atlet",
+                "operationId": "c2f475e44f1d863fc9cf930efa567bfc",
+                "responses": {
+                    "200": {
+                        "description": "Daftar Prestasi & Medali"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/athlete/ai-analytics": {
+            "post": {
+                "tags": [
+                    "Atlet"
+                ],
+                "summary": "Mengenerate Rekomendasi Latihan AI Berbasis OpenAI GPT",
+                "operationId": "185f8316de16bf2591ae5e33ce7bd28c",
+                "responses": {
+                    "200": {
+                        "description": "Narasi Analisis AI Hasil Umpan Balik FastAPI"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/attendance/checkin": {
+            "post": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Absensi Masuk Latihan (Check In)",
+                "operationId": "c080dbe95746c52796918e36c5372d99",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "latitude",
+                                    "longitude",
+                                    "selfie"
+                                ],
+                                "properties": {
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "double",
+                                        "example": -6.90389
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "double",
+                                        "example": 107.61861
+                                    },
+                                    "selfie": {
+                                        "description": "Base64 image or file path",
+                                        "type": "string",
+                                        "example": "selfie_mock_1.jpg"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Check In Berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Check In successful"
+                                        },
+                                        "record": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/attendance/checkout": {
+            "post": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Absensi Keluar Latihan (Check Out & Hitung Durasi)",
+                "operationId": "5b3ed707f9514e23292e3c93dd943d43",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "latitude",
+                                    "longitude",
+                                    "selfie"
+                                ],
+                                "properties": {
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "double",
+                                        "example": -6.90389
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "double",
+                                        "example": 107.61861
+                                    },
+                                    "selfie": {
+                                        "description": "Base64 image or file path",
+                                        "type": "string",
+                                        "example": "selfie_checkout_mock.jpg"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Check Out Berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Check Out successful"
+                                        },
+                                        "duration_minutes": {
+                                            "type": "integer",
+                                            "example": 150
+                                        },
+                                        "record": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/attendance/history": {
+            "get": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Mendapatkan Riwayat Kehadiran Latihan",
+                "operationId": "0a423594ff1638a580c60e87e5250b46",
+                "responses": {
+                    "200": {
+                        "description": "Daftar Riwayat Kehadiran",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Autentikasi"
+                ],
+                "summary": "Registrasi Pengguna & Atlet Baru",
+                "operationId": "c47a1b563e5e8bc3c7b962f893981e84",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "alamat",
+                                    "no_hp",
+                                    "ktp",
+                                    "kk"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Nama Lengkap",
+                                        "type": "string",
+                                        "example": "Muhammad Rafli"
+                                    },
+                                    "email": {
+                                        "description": "Email Login",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "rafli@psti.bandung.go.id"
+                                    },
+                                    "password": {
+                                        "description": "Kata Sandi",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "alamat": {
+                                        "description": "Alamat Lengkap",
+                                        "type": "string",
+                                        "example": "Jl. Lombok No. 12, Bandung"
+                                    },
+                                    "no_hp": {
+                                        "description": "No. Handphone",
+                                        "type": "string",
+                                        "example": "081122334455"
+                                    },
+                                    "ktp": {
+                                        "description": "Scan KTP",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "kk": {
+                                        "description": "Scan Kartu Keluarga",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "sertifikat[]": {
+                                        "description": "Sertifikat Medali/Penghargaan (Opsional)",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registrasi Berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registrasi berhasil. Skuad menunggu persetujuan admin."
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|token_hash_here"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "athlete": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Autentikasi"
+                ],
+                "summary": "Masuk ke Sistem (Mendapatkan Token Sanctum)",
+                "operationId": "1ff9c65c5cd1a8e0786e318eed856972",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "atlet@psti.bandung.go.id"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login Berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|token_hash_here"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validasi Gagal / Password Salah"
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "Autentikasi"
+                ],
+                "summary": "Keluar dari Sistem (Menghapus Token)",
+                "operationId": "eae6a8251a6469bbabe454860f64cf37",
+                "responses": {
+                    "200": {
+                        "description": "Logout Berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged out successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/profile": {
+            "get": {
+                "tags": [
+                    "Autentikasi"
+                ],
+                "summary": "Mendapatkan Informasi Profil Pengguna Aktif",
+                "operationId": "fbc33ac6296afc79593f63a82776f198",
+                "responses": {
+                    "200": {
+                        "description": "Profil Pengguna",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Muhammad Rafli"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "atlet@psti.bandung.go.id"
+                                        },
+                                        "role": {
+                                            "type": "string",
+                                            "example": "Atlet"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/schedules": {
+            "get": {
+                "tags": [
+                    "Jadwal"
+                ],
+                "summary": "Mendapatkan Daftar Jadwal Latihan Terdaftar",
+                "operationId": "7a1b43634b6320a995b206209abec08e",
+                "responses": {
+                    "200": {
+                        "description": "Daftar Jadwal Latihan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Atlet",
+            "description": "Atlet"
+        },
+        {
+            "name": "Absensi",
+            "description": "Absensi"
+        },
+        {
+            "name": "Autentikasi",
+            "description": "Autentikasi"
+        },
+        {
+            "name": "Jadwal",
+            "description": "Jadwal"
+        }
+    ]
+}
