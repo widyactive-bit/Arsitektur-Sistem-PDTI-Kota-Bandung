@@ -1,0 +1,57 @@
+services:
+  # 1. FastAPI AI Service
+  - type: web
+    name: psams-ai-service
+    env: python
+    branch: finish-resources
+    rootDir: ai_service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        value: sk-proj-placeholder
+
+  # 2. Laravel Backend Service
+  - type: web
+    name: psams-backend
+    env: php
+    branch: finish-resources
+    rootDir: backend
+    buildCommand: composer install --no-dev --optimize-autoloader
+    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        value: base64:CQj++MWdis50c7wljMSVaKvJ3GDWHS9+Mqnvy9qhsfo=
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: psams-db
+          property: host
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        fromDatabase:
+          name: psams-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: psams-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: psams-db
+          property: password
+      - key: AI_SERVICE_URL
+        value: http://psams-ai-service:8000/analyze # Will be resolved within Render private network
+
+databases:
+  # 3. PostgreSQL Database (Free Tier)
+  - name: psams-db
+    databaseName: psams_db
+    user: psams_user
+    plan: free
